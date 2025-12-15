@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>🎓 Diploma Doğrulama Sistemi</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f6f8fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 480px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            color: #2a4d9b;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            background: #2a4d9b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background: #1d3670;
+            }
+
+        #output {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        .valid {
+            color: green;
+            font-weight: bold;
+        }
+
+        .revoked {
+            color: red;
+            font-weight: bold;
+        }
+
+        .notfound {
+            color: orange;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Blockchain Diploma Doğrulama</h2>
+        <p>PDF veya görsel dosyanı seç:</p>
+        <input type="file" id="fileInput" accept=".pdf,.jpeg,.png" />
+        <br>
+        <button onclick="verify()">Doğrula</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        async function sha256(file) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        async function verify() {
+            const output = document.getElementById("output");
+            const fileInput = document.getElementById("fileInput");
+
+            if (!fileInput.files.length) {
+                output.textContent = "⚠️ Lütfen bir dosya seçin.";
+                return;
+            }
+
+            const file = fileInput.files[0];
+            output.textContent = "⏳ Hash hesaplanıyor...";
+            const hash = await sha256(file);
+
+            output.textContent = "🔍 Blockchain üzerinde kontrol ediliyor...";
+            try {
+                const res = await fetch(`http://localhost:5000/api/verify?hash=${hash}`);
+                const data = await res.json();
+
+                if (data.exists && !data.revoked)
+                    output.innerHTML = `<p class='valid'>✅ Diploma geçerli.</p><p>Token ID: ${data.tokenId}</p>`;
+                else if (data.revoked)
+                    output.innerHTML = `<p class='revoked'>⛔ Diploma iptal edilmiş.</p><p>Token ID: ${data.tokenId}</p>`;
+                else
+                    output.innerHTML = `<p class='notfound'>⚠️ Kayıt bulunamadı (sahte olabilir).</p>`;
+            } catch (err) {
+                output.innerHTML = `<p style="color:red;">❌ Sunucuya ulaşılamadı. (API kapalı olabilir)</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Blockchain Sertifika Doğrulama</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        /* === ARKA PLAN GLOW === */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            position: relative;
+            overflow: hidden;
+        }
+
+            body::before,
+            body::after {
+                content: "";
+                position: fixed;
+                width: 520px;
+                height: 520px;
+                border-radius: 999px;
+                filter: blur(90px);
+                opacity: 0.65;
+                z-index: -2;
+                transform: translate3d(0, 0, 0);
+            }
+
+            body::before {
+                background: radial-gradient(circle at 30% 10%, #22c55e, transparent 55%);
+                top: -120px;
+                left: -120px;
+            }
+
+            body::after {
+                background: radial-gradient(circle at 80% 80%, #0ea5e9, transparent 55%);
+                bottom: -160px;
+                right: -160px;
+            }
+
+        /* Hafif noise layer */
+        .noise-layer {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+            mix-blend-mode: soft-light;
+            z-index: -1;
+        }
+
+        /* === ANA YAPI === */
+        .container {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 28px 24px 32px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            margin-bottom: 6px;
+            padding: 14px 20px 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7));
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .header::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.28), transparent 55%);
+                opacity: 0.5;
+                pointer-events: none;
+            }
+
+            .header h1 {
+                margin: 0 0 4px;
+                font-size: 26px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                letter-spacing: 0.02em;
+            }
+
+        .logo-dot-wrap {
+            position: relative;
+        }
+
+        .logo-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #38bdf8, #1d4ed8);
+            box-shadow: 0 0 24px rgba(56, 189, 248, 0.9), 0 0 40px rgba(59, 130, 246, 0.8);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .logo-dot-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            opacity: 0.4;
+            animation: ring-glow 3.4s ease-out infinite;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            color: #cbd5f5;
+            max-width: 760px;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 18px rgba(56, 189, 248, 0.9), 0 0 32px rgba(59, 130, 246, 0.8);
+            }
+
+            50% {
+                transform: scale(1.14);
+                box-shadow: 0 0 28px rgba(56, 189, 248, 1), 0 0 46px rgba(59, 130, 246, 1);
+            }
+        }
+
+        @keyframes ring-glow {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.7;
+            }
+
+            60% {
+                transform: scale(1.35);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1.35);
+                opacity: 0;
+            }
+        }
+
+        /* KARTLARIN ORTALANMASI */
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cards {
+            width: 100%;
+            max-width: 1120px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            position: relative;
+            padding: 1px; /* border için */
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(94, 234, 212, 0.35), rgba(56, 189, 248, 0.15));
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.95), 0 0 0 1px rgba(15, 23, 42, 0.9);
+            overflow: hidden;
+            transform-origin: center;
+            transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+        }
+
+        .card-inner {
+            background: radial-gradient(circle at 10% 0, rgba(30, 64, 175, 0.75), rgba(15, 23, 42, 0.98));
+            border-radius: inherit;
+            padding: 20px 24px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -25%;
+            background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.32), transparent 50%), radial-gradient(circle at 100% 100%, rgba(45, 212, 191, 0.27), transparent 55%);
+            opacity: 0;
+            transition: opacity 0.22s ease-out;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 40px 90px rgba(15, 23, 42, 1), 0 0 0 1px rgba(148, 163, 184, 0.4);
+        }
+
+            .card:hover::before {
+                opacity: 1;
+            }
+
+        .card h2 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .card h2 span.emoji {
+                font-size: 21px;
+                filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.7));
+            }
+
+        .card p.subtitle {
+            margin: 0 0 16px;
+            font-size: 13px;
+            color: #cbd5f5;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e5e7eb;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+        }
+
+            .badge span {
+                color: #38bdf8;
+                font-weight: 600;
+            }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #e5e7eb;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            font-size: 13px;
+            box-sizing: border-box;
+            transition: border-color 0.12s ease-out, box-shadow 0.12s ease-out, background 0.12s ease-out;
+        }
+
+        input[type="file"] {
+            padding: 6px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            background: rgba(15, 23, 42, 0.95);
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6), 0 0 18px rgba(56, 189, 248, 0.3);
+        }
+
+        button {
+            margin-top: 14px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: radial-gradient(circle at 0 0, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 0 0 1px rgba(21, 128, 61, 0.4), 0 18px 40px rgba(22, 163, 74, 0.7);
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, opacity 0.15s ease-out;
+        }
+
+            button.secondary {
+                background: rgba(15, 23, 42, 0.9);
+                border: 1px solid rgba(148, 163, 184, 0.7);
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.85);
+                color: #e5e7eb;
+                font-size: 13px;
+            }
+
+            button:hover:not(:disabled) {
+                transform: translateY(-1px);
+                box-shadow: 0 0 0 1px rgba(21, 128, 61, 0.6), 0 22px 55px rgba(22, 163, 74, 0.9);
+            }
+
+            button.secondary:hover:not(:disabled) {
+                box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.9), 0 18px 35px rgba(15, 23, 42, 0.95);
+                transform: translateY(-1px);
+            }
+
+            button:disabled {
+                opacity: 0.55;
+                cursor: wait;
+                transform: none;
+                box-shadow: 0 0 0 1px rgba(55, 65, 81, 0.7);
+            }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            min-height: 18px;
+            color: #9ca3af;
+            white-space: pre-wrap;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .status::before {
+                content: "";
+                width: 9px;
+                height: 9px;
+                border-radius: 999px;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .status.success {
+                color: #4ade80;
+            }
+
+                .status.success::before {
+                    background: #22c55e;
+                    box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+                }
+
+            .status.error {
+                color: #fb7185;
+            }
+
+                .status.error::before {
+                    background: #fb7185;
+                    box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+                }
+
+        .result {
+            margin-top: 16px;
+            font-size: 12px;
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 12px;
+            padding: 10px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            max-height: 260px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .main {
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 16px 12px 24px;
+            }
+
+            .card-inner {
+                padding: 18px 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-layer"></div>
+
+    <div class="container">
+        <!-- ÜSTTE SABİT BAŞLIK -->
+        <div class="header">
+            <h1>
+                <span class="logo-dot-wrap">
+                    <span class="logo-dot-ring"></span>
+                    <span class="logo-dot"></span>
+                </span>
+                Blockchain Sertifika Doğrulama Sistemi
+            </h1>
+            <p>
+                PDF sertifikayı IPFS'e yüklüyor, SHA-256 hash'ini ve IPFS URI'sini
+                Ethereum tabanlı <strong>CertificateRegistry</strong> akıllı kontratında saklıyor.
+                Aşağıdan hem <em>issue</em> hem de <em>verify</em> akışını sınıfta canlı gösterebilirsin.
+            </p>
+        </div>
+
+        <!-- ALTTAKİ KUTULAR: ORTADA -->
+        <div class="main">
+            <div class="cards">
+                <!-- SOL: Sertifika Oluştur -->
+                <div class="card">
+                    <div class="card-inner">
+                        <h2>
+                            <span class="emoji">🎓</span>
+                            Sertifika Oluştur
+                            <span class="badge"><span>POST</span> /api/issue</span>
+                        </h2>
+                        <p class="subtitle">
+                            Admin rolündeki kullanıcı PDF dosyasını yükler, öğrenci adını girer.
+                            Sistem dosyanın hash'ini hesaplayıp IPFS CID'i ve hash'i akıllı kontrata kaydeder.
+                        </p>
+
+                        <label for="issue-student">Öğrenci Adı</label>
+                        <input id="issue-student" type="text" placeholder="Örn: Simay Ayanoğlu" />
+
+                        <label for="issue-file">PDF Sertifika Dosyası</label>
+                        <input id="issue-file" type="file" accept="application/pdf" />
+
+                        <button id="issue-btn">📤 Sertifikayı Kaydet (Issue)</button>
+
+                        <div id="issue-status" class="status"></div>
+                        <div id="issue-result" class="result" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <!-- SAĞ: Sertifika Doğrula -->
+                <div class="card">
+                    <div class="card-inner">
+                        <h2>
+                            <span class="emoji">✅</span>
+                            Sertifika Doğrula
+                            <span class="badge"><span>GET</span> /api/verify</span>
+                        </h2>
+                        <p class="subtitle">
+                            Elindeki sertifika için SHA-256 hash'i hesaplandığında bu ekrana girilir.
+                            Sistem, hash'in blokzincirde kayıtlı olup olmadığını ve detaylarını gösterir.
+                        </p>
+
+                        <label for="verify-hash">SHA-256 Hash (64 hex karakter)</label>
+                        <input id="verify-hash" type="text" placeholder="Örn: 5dd19c...b031ca" />
+
+                        <div class="pill-row">
+                            <button id="paste-hash-btn" class="secondary">
+                                📋 Issue'dan Gelen Hash'i Yapıştır
+                            </button>
+                        </div>
+
+                        <button id="verify-btn">🔎 Doğrula (Verify)</button>
+
+                        <div id="verify-status" class="status"></div>
+                        <div id="verify-result" class="result" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Backend API adresi
+        const API_BASE = "http://localhost:5000";
+
+        const issueBtn = document.getElementById("issue-btn");
+        const issueStudent = document.getElementById("issue-student");
+        const issueFile = document.getElementById("issue-file");
+        const issueStatus = document.getElementById("issue-status");
+        const issueResult = document.getElementById("issue-result");
+
+        const verifyBtn = document.getElementById("verify-btn");
+        const verifyHashInput = document.getElementById("verify-hash");
+        const verifyStatus = document.getElementById("verify-status");
+        const verifyResult = document.getElementById("verify-result");
+
+        const pasteHashBtn = document.getElementById("paste-hash-btn");
+
+        let lastIssuedHash = null; // issue'dan dönen hash'i verify tarafında kullanmak için
+
+        issueBtn.addEventListener("click", async () => {
+            const student = issueStudent.value.trim();
+            const file = issueFile.files[0];
+
+            issueStatus.className = "status";
+            issueResult.style.display = "none";
+            issueResult.textContent = "";
+
+            if (!student) {
+                issueStatus.textContent = "⚠ Öğrenci adını girmelisin.";
+                issueStatus.classList.add("error");
+                return;
+            }
+            if (!file) {
+                issueStatus.textContent = "⚠ Bir PDF dosyası seçmelisin.";
+                issueStatus.classList.add("error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("student", student);
+            formData.append("file", file);
+
+            issueBtn.disabled = true;
+            issueStatus.textContent = "⏳ IPFS'e yükleniyor ve blokzincire yazılıyor...";
+            issueStatus.classList.remove("error", "success");
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/issue`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(`Sunucu hatası (${resp.status}): ${text}`);
+                }
+
+                const data = await resp.json();
+                lastIssuedHash = data.sha256;
+
+                issueStatus.textContent = "✅ Sertifika başarıyla kaydedildi.";
+                issueStatus.classList.add("success");
+
+                issueResult.style.display = "block";
+                issueResult.textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                console.error(err);
+                issueStatus.textContent = "❌ Hata: " + err.message;
+                issueStatus.classList.add("error");
+            } finally {
+                issueBtn.disabled = false;
+            }
+        });
+
+        pasteHashBtn.addEventListener("click", () => {
+            verifyStatus.className = "status";
+            verifyStatus.textContent = "";
+
+            if (!lastIssuedHash) {
+                verifyStatus.textContent = "⚠ Önce sol taraftan bir sertifika üretmelisin (issue çağrısı).";
+                verifyStatus.classList.add("error");
+                return;
+            }
+
+            verifyHashInput.value = lastIssuedHash;
+            verifyStatus.textContent = "ℹ Son üretilen sertifikanın hash'i inputa yerleştirildi.";
+        });
+
+        verifyBtn.addEventListener("click", async () => {
+            const hash = verifyHashInput.value.trim();
+
+            verifyStatus.className = "status";
+            verifyResult.style.display = "none";
+            verifyResult.textContent = "";
+
+            if (!hash) {
+                verifyStatus.textContent = "⚠ Hash alanına bir değer girmelisin.";
+                verifyStatus.classList.add("error");
+                return;
+            }
+
+            if (hash.length !== 64 && !(hash.startsWith("0x") && hash.length === 66)) {
+                verifyStatus.textContent = "⚠ Hash 64 hex karakter olmalı (veya 0x ile başlayan 66).";
+                verifyStatus.classList.add("error");
+                return;
+            }
+
+            verifyBtn.disabled = true;
+            verifyStatus.textContent = "⏳ Blokzincirde kayıt kontrol ediliyor...";
+            verifyStatus.classList.remove("error", "success");
+
+            try {
+                const url = new URL(`${API_BASE}/api/verify`);
+                url.searchParams.set("hash", hash);
+
+                const resp = await fetch(url);
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(`Sunucu hatası (${resp.status}): ${text}`);
+                }
+
+                const data = await resp.json();
+
+                verifyResult.style.display = "block";
+                verifyResult.textContent = JSON.stringify(data, null, 2);
+
+                if (!data.exists) {
+                    verifyStatus.textContent = "❌ Bu hash için kayıt bulunamadı.";
+                    verifyStatus.classList.add("error");
+                } else {
+                    verifyStatus.textContent = "✅ Sertifika blokzincirde kayıtlı.";
+                    verifyStatus.classList.add("success");
+                }
+            } catch (err) {
+                console.error(err);
+                verifyStatus.textContent = "❌ Hata: " + err.message;
+                verifyStatus.classList.add("error");
+            } finally {
+                verifyBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

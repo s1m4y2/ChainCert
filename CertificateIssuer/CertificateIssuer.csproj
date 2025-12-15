@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="DotEnv.Core" Version="2.3.0" />
+		<PackageReference Include="JsonHttpClient.Encryption.AspNetCore" Version="1.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="8.0.21" />
+		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Nethereum.Web3" Version="4.21.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="abi\" />
+	</ItemGroup>
+</Project>
