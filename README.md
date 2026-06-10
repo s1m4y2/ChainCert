@@ -156,7 +156,6 @@ Ganache hesabını MetaMask’e import et:
 * Ganache → Accounts → **Private Key**
 * MetaMask → Import Account → private key yapıştır
 
-> ⚠️ Bu private key **sadece local test** için. GitHub’a koyma.
 
 ---
 
@@ -185,7 +184,6 @@ RPC_URL=http://127.0.0.1:7545
 CONTRACT_ADDRESS=0xYourContractAddress
 ```
 
-✅ **.env GitHub’a atılmamalı.** `.env.example` repo’da kalmalı.
 
 ---
 
