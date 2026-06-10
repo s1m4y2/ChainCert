@@ -259,20 +259,7 @@ UI içinde `API_BASE` olarak `http://localhost:5000` kullanılır.
 
 ---
 
-## 🔐 Güvenlik Notları (GitHub’a Yüklemeden Önce)
 
-Repo’ya **asla** şunları koyma:
-
-* `.env`
-* Private key / seed phrase
-* Pinata JWT / API key
-
-Bunun yerine:
-
-* `.env.example` (placeholder’lı)
-* README’de kurulum adımları
-
----
 
 ## 🧪 Sık Karşılaşılan Hatalar
 
