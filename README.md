@@ -9,7 +9,7 @@ Sistem; sertifika PDF’ini **IPFS’e (Pinata üzerinden)** yükler, belgenin *
 
 ---
 
-## 🚀 Canlı Demo Akışı (Sınıfta Gösterim İçin)
+## 🚀 Canlı Demo Akışı 
 
 ### 1) Issue (Sertifika Oluştur)
 
